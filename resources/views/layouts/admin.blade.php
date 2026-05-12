@@ -4,62 +4,358 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Podgasm - Warehouse Management</title>
-    
-    <!-- Bootstrap 5 CSS -->
+
+    {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Ikon -->
+
+    {{-- Font Awesome --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
+    {{-- Google Font --}}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { display: flex; min-height: 100vh; background-color: #f4f7f6; }
-        .sidebar { width: 250px; background: #2c3e50; color: white; transition: all 0.3s; }
-        .sidebar .nav-link { color: #bdc3c7; padding: 15px 20px; border-bottom: 1px solid #34495e; }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: #34495e; color: white; }
-        .content-area { flex: 1; padding: 20px; }
-        .navbar-admin { background: white; border-bottom: 1px solid #dee2e6; }
+        *{
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body{
+            display: flex;
+            min-height: 100vh;
+            background: #f5f7fb;
+            overflow-x: hidden;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .sidebar{
+            width: 270px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+
+        .logo-area{
+            padding: 28px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo-title{
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .logo-title span{
+            color: #3b82f6;
+        }
+
+        .logo-subtitle{
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .nav-menu{
+            padding: 18px 14px;
+        }
+
+        .nav-link{
+            color: #d1d5db;
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 500;
+        }
+
+        .nav-link:hover{
+            background: rgba(255,255,255,0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-link.active{
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            box-shadow: 0 6px 16px rgba(37,99,235,0.3);
+        }
+
+        .nav-link i{
+            width: 22px;
+        }
+
+        .badge-notif{
+            font-size: 0.72rem;
+            padding: 5px 9px;
+        }
+
+        .logout-area{
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 14px;
+        }
+
+        .logout-btn{
+            color: #f87171 !important;
+        }
+
+        .logout-btn:hover{
+            background: rgba(248,113,113,0.1);
+        }
+
+        /* ================= CONTENT ================= */
+
+        .content-area{
+            flex: 1;
+            padding: 24px;
+        }
+
+        /* ================= NAVBAR ================= */
+
+        .navbar-admin{
+            background: white;
+            border-radius: 20px;
+            padding: 16px 22px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eef1f5;
+        }
+
+        .welcome-text h5{
+            margin: 0;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .welcome-text p{
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .admin-profile{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f9fafb;
+            padding: 10px 16px;
+            border-radius: 14px;
+        }
+
+        .admin-profile i{
+            font-size: 1.8rem;
+            color: #2563eb;
+        }
+
+        /* ================= ALERT ================= */
+
+        .alert{
+            border: none;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .alert-danger{
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .alert-success{
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        /* ================= CONTENT CARD ================= */
+
+        .content-wrapper{
+            margin-top: 22px;
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            min-height: 500px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media(max-width: 992px){
+
+            .sidebar{
+                width: 85px;
+            }
+
+            .logo-title,
+            .logo-subtitle,
+            .nav-link span,
+            .nav-link .menu-text,
+            .badge-notif{
+                display: none;
+            }
+
+            .nav-link{
+                justify-content: center;
+            }
+
+            .content-area{
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Khusus Admin -->
-    <div class="sidebar d-flex flex-column">
-        <div class="p-4 fs-4 fw-bold border-bottom border-secondary">Admin Podgasm</div>
-        <nav class="nav flex-column">
-            <a class="nav-link active" href="/admin/dashboard">
-                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-            </a>
-            <a class="nav-link" href="/admin/products">
-                <i class="fas fa-boxes me-2"></i> Manajemen Stok
-            </a>
-            <a class="nav-link" href="/admin/safety-stock">
-                <i class="fas fa-calculator me-2"></i> Algoritma Safety Stock
-            </a>
-            <a class="nav-link" href="/admin/reports/inventory">
-                <i class="fas fa-file-invoice me-2"></i> Laporan Depresiasi
-            </a>
-            <div class="mt-auto">
-                <a class="nav-link text-danger" href="/logout">
-                    <i class="fas fa-sign-out-alt me-2"></i> Keluar
-                </a>
+    {{-- ================= SIDEBAR ================= --}}
+    <div class="sidebar">
+
+        <div class="logo-area text-center">
+            <div class="logo-title">
+                PODGASM <span>HQ</span>
             </div>
-        </nav>
+
+            <div class="logo-subtitle">
+                Warehouse Management System
+            </div>
+        </div>
+
+        <div class="nav-menu">
+
+            {{-- Dashboard --}}
+            <a class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}"
+               href="/admin/dashboard">
+
+                <div>
+                    <i class="fas fa-chart-pie me-2"></i>
+                    <span class="menu-text">Dashboard</span>
+                </div>
+            </a>
+
+            {{-- Manajemen Stok --}}
+            <a class="nav-link {{ request()->is('admin/products*') ? 'active' : '' }}"
+               href="/admin/products">
+
+                <div>
+                    <i class="fas fa-boxes-stacked me-2"></i>
+                    <span class="menu-text">Manajemen Stok</span>
+                </div>
+            </a>
+
+            {{-- Permintaan Stok --}}
+            <a class="nav-link {{ request()->is('admin/stock-requests*') ? 'active' : '' }}"
+               href="{{ route('admin.stock-requests.index') }}">
+
+                <div>
+                    <i class="fas fa-truck-loading me-2"></i>
+                    <span class="menu-text">Permintaan Stok</span>
+                </div>
+
+                @if(isset($pendingRequestCount) && $pendingRequestCount > 0)
+                    <span class="badge bg-danger rounded-pill badge-notif">
+                        {{ $pendingRequestCount }}
+                    </span>
+                @endif
+            </a>
+
+            {{-- Safety Stock --}}
+            <a class="nav-link {{ request()->is('admin/safety-stock*') ? 'active' : '' }}"
+               href="/admin/safety-stock">
+
+                <div>
+                    <i class="fas fa-calculator me-2"></i>
+                    <span class="menu-text">Safety Stock</span>
+                </div>
+            </a>
+
+            {{-- Laporan --}}
+            <a class="nav-link {{ request()->is('admin/reports*') ? 'active' : '' }}"
+               href="/admin/reports/inventory">
+
+                <div>
+                    <i class="fas fa-file-chart-column me-2"></i>
+                    <span class="menu-text">Laporan</span>
+                </div>
+            </a>
+
+        </div>
+
+        {{-- Logout --}}
+        <div class="logout-area">
+            <form action="/logout" method="POST">
+                @csrf
+
+                <button type="submit"
+                        class="nav-link logout-btn w-100 border-0 bg-transparent text-start">
+
+                    <div>
+                        <i class="fas fa-right-from-bracket me-2"></i>
+                        <span class="menu-text">Keluar</span>
+                    </div>
+
+                </button>
+            </form>
+        </div>
+
     </div>
 
-    <!-- Main Content -->
+    {{-- ================= CONTENT ================= --}}
     <div class="content-area">
-        <nav class="navbar navbar-expand-lg navbar-admin mb-4 rounded shadow-sm">
-            <div class="container-fluid">
-                <span class="navbar-text fw-semibold">Gudang Pusat Podgasm Surabaya</span>
-                <div class="ms-auto d-flex align-items-center">
-                    <span class="me-3"><i class="fas fa-user-circle me-1"></i> Admin Utama</span>
+
+        {{-- Navbar --}}
+        <nav class="navbar-admin d-flex justify-content-between align-items-center">
+
+            <div class="welcome-text">
+                <h5>Gudang Pusat Podgasm Surabaya</h5>
+                <p>Sistem Monitoring Persediaan & Distribusi Barang</p>
+            </div>
+
+            <div class="admin-profile">
+                <i class="fas fa-circle-user"></i>
+
+                <div>
+                    <div class="fw-semibold">Admin Utama</div>
+                    <small class="text-muted">Warehouse Administrator</small>
                 </div>
             </div>
+
         </nav>
 
-        @yield('content_admin')
+        {{-- Alert Error --}}
+        @if($errors->any())
+            <div class="alert alert-danger mt-4">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Alert Success --}}
+        @if(session('success'))
+            <div class="alert alert-success mt-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        {{-- Content --}}
+        <div class="content-wrapper">
+
+            @yield('content_admin')
+
+        </div>
+
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    {{-- Bootstrap JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

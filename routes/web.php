@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SafetyStockController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Branch\BranchController;
+use App\Http\Controllers\Admin\StockRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +31,7 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 /*
@@ -78,44 +80,55 @@ Route::prefix('wishlist')->group(function () {
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
-
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
+    ->name('admin.') // INI KUNCINYA! Biar semua route di bawah otomatis punya prefix 'admin.'
     ->group(function () {
 
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // Produk
-    Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'index'])->name('admin.products.index');
-        Route::get('/create', [ProductController::class, 'create'])->name('admin.products.create');
-        Route::post('/', [ProductController::class, 'store'])->name('admin.products.store');
-        Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
-        Route::put('/{product}', [ProductController::class, 'update'])->name('admin.products.update');
-        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
-    });
+        // Manajemen Produk
+        Route::resource('products', ProductController::class)->except(['show']);
 
-    // Safety Stock
-    Route::get('/safety-stock', [SafetyStockController::class, 'index'])->name('admin.ss.index');
-    Route::post('/safety-stock/calculate/{id}', [SafetyStockController::class, 'calculate'])->name('admin.ss.calculate');
+        // Algoritma Safety Stock
+        Route::controller(SafetyStockController::class)->group(function () {
+            Route::get('/safety-stock', 'index')->name('ss.index');
+            Route::post('/safety-stock/calculate/{id}', 'calculate')->name('ss.calculate');
+        });
 
-    // Report
-    Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('admin.reports.inventory');
-});
+        // Manajemen Permintaan Stok Cabang (Approval)
+        Route::controller(StockRequestController::class)->group(function () {
+            Route::get('/stock-requests', 'index')->name('stock-requests.index');
+            Route::post('/stock-requests/{id}/approve', 'approve')->name('stock-requests.approve');
+            Route::post('/stock-requests/{id}/reject', 'reject')->name('stock-requests.reject');
+        });
+
+        // Laporan
+        Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('reports.inventory');
+
+    }
+);
 
 /*
 |--------------------------------------------------------------------------
-| BRANCH
+| BRANCH / CABANG ROUTES
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:branch'])
+Route::middleware(['auth', 'role:branch']) // Pastikan user login & rolenya branch
     ->prefix('branch')
+    ->as('branch.')
     ->group(function () {
-        // future branch routes
+        
+        // Halaman Dashboard Utama Cabang
+        Route::get('/dashboard', [BranchController::class, 'dashboard'])->name('dashboard');
+
+        // Fitur Request Stock (Form & Simpan)
+        Route::get('/request-stock', [BranchController::class, 'index'])->name('request');
+        Route::post('/request-stock', [BranchController::class, 'storeRequest'])->name('request.store');
+
+        // Fitur Monitoring / Tracking
+        Route::get('/tracking', [BranchController::class, 'tracking'])->name('tracking');
+
     });

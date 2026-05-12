@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str; // Tambahkan ini untuk generate slug
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -15,13 +15,12 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
-        if ($request->filter == 'latest') {
-            $query->latest();
+        // Fitur Search (biar admin gampang cari barang)
+        if ($request->has('search')) {
+            $query->where('nama_barang', 'like', '%' . $request->search . '%');
         }
 
-        // Gunakan pagination agar tampilan admin tetap rapi
-        $products = $query->paginate(10);
-
+        $products = $query->latest()->paginate(10);
         return view('pages.admin.products.index', compact('products'));
     }
 
@@ -33,31 +32,50 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // 1. Validasi Input
         $request->validate([
-            'nama_barang' => 'required|unique:products,nama_barang',
-            'category_id' => 'required',
-            'harga_jual'   => 'required|numeric',
-            'stok_aktual'  => 'required|numeric',
-            'gambar'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+            'nama_barang'    => 'required|unique:products,nama_barang',
+            'category_id'    => 'required|exists:categories,id',
+            'harga_jual'     => 'required|numeric|min:0',
+            'stok_aktual'    => 'required|integer|min:0',
+            'lead_time'      => 'nullable|integer|min:0',
+            'rata_penjualan' => 'nullable|integer|min:0',
+            'nilai_ss'       => 'nullable|integer|min:0',
+            'gambar'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'tgl_expired'    => 'nullable|date',
+            'tgl_cukai'      => 'nullable|date',
         ]);
 
-        $data = $request->all();
+        try {
+            $data = $request->all();
 
-        // 🔥 REVISI 1: Generate Slug otomatis
-        $data['slug'] = Str::slug($request->nama_barang);
+            // Generate Slug otomatis dari nama barang
+            $data['slug'] = Str::slug($request->nama_barang);
 
-        // 🔥 REVISI 2: Logika Promo (set default jika tidak dicentang)
-        $data['is_promo'] = $request->has('is_promo');
+            // Logika Checkbox Promo
+            $data['is_promo'] = $request->has('is_promo') ? true : false;
+            $data['diskon_persen'] = $request->diskon_persen ?? 0;
 
-        // Upload gambar
-        if ($request->hasFile('gambar')) {
-            $data['gambar'] = $request->file('gambar')->store('products', 'public');
+            // Pastikan kolom inti TA kamu ada nilainya (default 0 jika kosong)
+            $data['lead_time'] = $request->lead_time ?? 0;
+            $data['rata_penjualan'] = $request->rata_penjualan ?? 0;
+            $data['nilai_ss'] = $request->nilai_ss ?? 0;
+
+            // Handle Upload Gambar
+            if ($request->hasFile('gambar')) {
+                $data['gambar'] = $request->file('gambar')->store('products', 'public');
+            }
+
+            // EKSEKUSI SIMPAN
+            Product::create($data);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Gacor! Produk ' . $request->nama_barang . ' berhasil ditambah.');
+
+        } catch (\Exception $e) {
+            // Jika ada error (misal: kolom kurang di $fillable), akan muncul pesan ini
+            return back()->withInput()->withErrors(['msg' => 'Gagal Simpan: ' . $e->getMessage()]);
         }
-
-        Product::create($data);
-
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Produk berhasil ditambah!');
     }
 
     public function edit(Product $product)
@@ -69,45 +87,50 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $request->validate([
-            'nama_barang' => 'required|unique:products,nama_barang,' . $product->id,
-            'category_id' => 'required',
-            'harga_jual'   => 'required|numeric',
-            'stok_aktual'  => 'required|numeric',
-            'gambar'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+            'nama_barang'    => 'required|unique:products,nama_barang,' . $product->id,
+            'category_id'    => 'required|exists:categories,id',
+            'harga_jual'     => 'required|numeric|min:0',
+            'stok_aktual'    => 'required|integer|min:0',
+            'gambar'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = $request->all();
-        
-        // Update Slug jika nama barang berubah
-        $data['slug'] = Str::slug($request->nama_barang);
-        
-        // Logika Promo
-        $data['is_promo'] = $request->has('is_promo');
+        try {
+            $data = $request->all();
+            $data['slug'] = Str::slug($request->nama_barang);
+            $data['is_promo'] = $request->has('is_promo') ? true : false;
+            
+            // Default values untuk kolom numerik
+            $data['lead_time'] = $request->lead_time ?? $product->lead_time;
+            $data['rata_penjualan'] = $request->rata_penjualan ?? $product->rata_penjualan;
+            $data['nilai_ss'] = $request->nilai_ss ?? $product->nilai_ss;
 
-        if ($request->hasFile('gambar')) {
-            // hapus gambar lama jika ada
-            if ($product->gambar) {
-                Storage::disk('public')->delete($product->gambar);
+            if ($request->hasFile('gambar')) {
+                if ($product->gambar) {
+                    Storage::disk('public')->delete($product->gambar);
+                }
+                $data['gambar'] = $request->file('gambar')->store('products', 'public');
             }
-            // simpan gambar baru
-            $data['gambar'] = $request->file('gambar')->store('products', 'public');
+
+            $product->update($data);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Produk berhasil diupdate!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->withErrors(['msg' => 'Gagal Update: ' . $e->getMessage()]);
         }
-
-        $product->update($data);
-
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Produk berhasil diupdate!');
     }
 
     public function destroy(Product $product)
     {
-        if ($product->gambar) {
-            Storage::disk('public')->delete($product->gambar);
+        try {
+            if ($product->gambar) {
+                Storage::disk('public')->delete($product->gambar);
+            }
+            $product->delete();
+            return redirect()->route('admin.products.index')->with('success', 'Produk dihapus!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal Hapus: ' . $e->getMessage()]);
         }
-
-        $product->delete();
-
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Produk berhasil dihapus!');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\StockRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -31,5 +32,16 @@ class AdminController extends Controller
             'totalPenjualan', 
             'potensiKerugian'
         ));
+    }
+
+    public function index()
+    {
+        $pendingCount = StockRequest::where('status', 'Pending')->count();
+        
+        if ($pendingCount > 0) {
+            session()->now('warning', "Ada $pendingCount permintaan stok baru yang perlu diproses!");
+        }
+
+        return view('pages.admin.dashboard');
     }
 }

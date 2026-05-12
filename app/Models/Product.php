@@ -12,12 +12,14 @@ class Product extends Model
     protected $fillable = [
         'category_id', 
         'nama_barang', 
-        'slug', // Tambahkan ini
+        'slug', 
         'harga_jual', 
         'stok_aktual', 
         'tgl_expired', 
         'tgl_cukai',
         'nilai_ss',
+        'lead_time', // <--- TAMBAHKAN INI
+        'rata_penjualan', // <--- TAMBAHKAN INI
         'is_promo',
         'diskon_persen',
         'gambar'
